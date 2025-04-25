@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Roman Cipher</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 400px;
+      margin: 2rem auto;
+    }
+
+    input,
+    textarea,
+    button {
+      width: 100%;
+      margin: .5rem 0;
+    }
+
+    #output {
+      padding: .5rem;
+      background: #f0f0f0;
+      min-height: 3em;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>Roman Cipher</h2>
+
+  <input id="key" type="number" value="3" placeholder="Shift amount" />
+  <textarea id="text" placeholder="Type here…"></textarea>
+  <button id="encrypt">Encrypt</button>
+  <button id="decrypt">Decrypt</button>
+
+  <div id="output"></div>
+
+  <script>
+    // Predefine arrays of uppercase and lowercase letters
+    const UPPER = Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+    const LOWER = Array.from('abcdefghijklmnopqrstuvwxyz');
+
+    // shift a char by n using the arrays
+    function shiftChar(c, n) {
+      if (UPPER.includes(c)) {
+        const idx = UPPER.indexOf(c);
+        return UPPER[(idx + n + 26) % 26];
+      }
+      if (LOWER.includes(c)) {
+        const idx = LOWER.indexOf(c);
+        return LOWER[(idx + n + 26) % 26];
+      }
+      return c; // non-letters unchanged
+    }
+
+    // apply shift to whole text
+    function cipher(str, n) {
+      return [...str].map(ch => shiftChar(ch, n)).join('');
+    }
+
+    document.getElementById('encrypt').onclick = () => {
+      const k = +document.getElementById('key').value;
+      const txt = document.getElementById('text').value;
+      document.getElementById('output').textContent = cipher(txt, k);
+    };
+
+    document.getElementById('decrypt').onclick = () => {
+      const k = +document.getElementById('key').value;
+      const txt = document.getElementById('text').value;
+      document.getElementById('output').textContent = cipher(txt, -k);
+    };
+  </script>
+
+</body>
+
+</html>
