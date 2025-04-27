@@ -3,47 +3,38 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Roman Cipher</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      max-width: 400px;
-      margin: 2rem auto;
-    }
-
-    input,
-    textarea,
-    button {
-      width: 100%;
-      margin: .5rem 0;
-    }
-
-    #output {
-      padding: .5rem;
-      background: #f0f0f0;
-      min-height: 3em;
-    }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
 
-  <h2>Roman Cipher</h2>
+  <div class="bg-white shadow-lg rounded-lg p-6 w-full max-w-md">
+    <h2 class="text-2xl font-bold mb-4 text-center">Roman Cipher</h2>
 
-  <input id="key" type="number" value="3" placeholder="Shift amount" />
-  <textarea id="text" placeholder="Type here…"></textarea>
-  <button id="encrypt">Encrypt</button>
-  <button id="decrypt">Decrypt</button>
+    <textarea id="text" placeholder="Type here…"
+      class="w-full border border-gray-300 rounded-lg p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
 
-  <div id="output"></div>
+    <input id="key" type="number" value="3" placeholder="Shift amount"
+      class="w-full border border-gray-300 rounded-lg p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+
+    <div id="output" class="w-full bg-gray-100 rounded-lg p-3 mb-4 min-h-[3em]"></div>
+
+    <div class="flex gap-4">
+      <button id="encrypt" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg">
+        Encrypt
+      </button>
+      <button id="decrypt" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg">
+        Decrypt
+      </button>
+    </div>
+  </div>
 
   <script>
-    // Predefine arrays of uppercase and lowercase letters
     const UPPER = Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
     const LOWER = Array.from('abcdefghijklmnopqrstuvwxyz');
 
-    // shift a char by n using the arrays
     function shiftChar(c, n) {
       if (UPPER.includes(c)) {
         const idx = UPPER.indexOf(c);
@@ -53,10 +44,9 @@
         const idx = LOWER.indexOf(c);
         return LOWER[(idx + n + 26) % 26];
       }
-      return c; // non-letters unchanged
+      return c;
     }
 
-    // apply shift to whole text
     function cipher(str, n) {
       return [...str].map(ch => shiftChar(ch, n)).join('');
     }
