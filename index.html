@@ -3,122 +3,113 @@
 <head>
   <meta charset="UTF-8">
   <title>Roman (Caesar) Cipher Tool</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      max-width: 800px;
-      margin: auto;
-      padding: 20px;
-    }
-    textarea {
-      width: 100%;
-      height: 100px;
-      margin-bottom: 10px;
-    }
-    select, button, input {
-      margin: 5px 0;
-      padding: 5px;
-    }
-    pre {
-      background: #f4f4f4;
-      padding: 10px;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex items-center justify-center p-4">
 
-<h2>Roman (Caesar) Cipher Tool</h2>
+  <div class="bg-white shadow-md rounded-xl w-full max-w-2xl p-4 sm:p-6">
+    <h2 class="text-xl sm:text-2xl font-bold mb-4">Roman (Caesar) Cipher Tool</h2>
 
-<textarea id="inputText" placeholder="Enter your text here..."></textarea><br>
-<select id="mode">
-  <option value="encrypt">Encrypt</option>
-  <option value="decrypt">Decrypt</option>
-  <option value="bruteforce">Bruteforce Crack</option>
-  <option value="autocrack">AutoCrack (Freq. Analysis)</option>
-</select><br>
-<input type="number" id="key" placeholder="Key (for Encrypt/Decrypt)" /><br>
-<button onclick="runCipher()">Run</button>
+    <textarea id="inputText" placeholder="Enter your text here..."
+      class="w-full h-32 p-3 border border-gray-300 rounded mb-4 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base"></textarea>
 
-<h3>Result:</h3>
-<pre id="output"></pre>
+    <div class="mb-4">
+      <select id="mode"
+        class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base">
+        <option value="encrypt">Encrypt</option>
+        <option value="decrypt">Decrypt</option>
+        <option value="bruteforce">Bruteforce Crack</option>
+        <option value="autocrack">AutoCrack (Freq. Analysis)</option>
+      </select>
+    </div>
 
-<script>
-function caesarShift(text, shift) {
-  return text.split('').map(char => {
-    const code = char.charCodeAt(0);
-    if (char >= 'A' && char <= 'Z') {
-      return String.fromCharCode((code - 65 + shift + 26) % 26 + 65);
+    <input type="number" id="key" placeholder="Key (for Encrypt/Decrypt)"
+      class="w-full p-2 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base" />
+
+    <button onclick="runCipher()"
+      class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition mb-4 w-full text-sm sm:text-base">Run</button>
+
+    <h3 class="text-lg sm:text-xl font-semibold mb-2">Result:</h3>
+    <pre id="output"
+      class="bg-gray-100 p-4 border border-gray-300 rounded whitespace-pre-wrap break-words text-sm sm:text-base"></pre>
+  </div>
+
+  <script>
+    function caesarShift(text, shift) {
+      return text.split('').map(char => {
+        const code = char.charCodeAt(0);
+        if (char >= 'A' && char <= 'Z') {
+          return String.fromCharCode((code - 65 + shift + 26) % 26 + 65);
+        }
+        if (char >= 'a' && char <= 'z') {
+          return String.fromCharCode((code - 97 + shift + 26) % 26 + 97);
+        }
+        return char;
+      }).join('');
     }
-    if (char >= 'a' && char <= 'z') {
-      return String.fromCharCode((code - 97 + shift + 26) % 26 + 97);
+
+    function letterFrequency(text) {
+      const freq = Array(26).fill(0);
+      const clean = text.toUpperCase().replace(/[^A-Z]/g, '');
+      for (let char of clean) {
+        freq[char.charCodeAt(0) - 65]++;
+      }
+      return freq.map(f => f / clean.length);
     }
-    return char;
-  }).join('');
-}
 
-function letterFrequency(text) {
-  const freq = Array(26).fill(0);
-  const clean = text.toUpperCase().replace(/[^A-Z]/g, '');
-  for (let char of clean) {
-    freq[char.charCodeAt(0) - 65]++;
-  }
-  return freq.map(f => f / clean.length);
-}
+    const englishFreq = [
+      0.08167, 0.01492, 0.02782, 0.04253, 0.12702, 0.02228,
+      0.02015, 0.06094, 0.06966, 0.00153, 0.00772, 0.04025,
+      0.02406, 0.06749, 0.07507, 0.01929, 0.00095, 0.05987,
+      0.06327, 0.09056, 0.02758, 0.00978, 0.02360, 0.00150,
+      0.01974, 0.00074
+    ];
 
-const englishFreq = [
-  0.08167, 0.01492, 0.02782, 0.04253, 0.12702, 0.02228,
-  0.02015, 0.06094, 0.06966, 0.00153, 0.00772, 0.04025,
-  0.02406, 0.06749, 0.07507, 0.01929, 0.00095, 0.05987,
-  0.06327, 0.09056, 0.02758, 0.00978, 0.02360, 0.00150,
-  0.01974, 0.00074
-];
-
-function frequencyScore(textFreq) {
-  return englishFreq.map((ef, i) => Math.abs(ef - textFreq[i])).reduce((a, b) => a + b, 0);
-}
-
-function autoCrack(text) {
-  let bestKey = 0;
-  let bestScore = Infinity;
-
-  for (let key = 0; key < 26; key++) {
-    const decrypted = caesarShift(text, -key);
-    const freq = letterFrequency(decrypted);
-    const score = frequencyScore(freq);
-    if (score < bestScore) {
-      bestScore = score;
-      bestKey = key;
+    function frequencyScore(textFreq) {
+      return englishFreq.map((ef, i) => Math.abs(ef - textFreq[i])).reduce((a, b) => a + b, 0);
     }
-  }
 
-  return `Likely Key: ${bestKey}\n\nDecrypted Text:\n${caesarShift(text, -bestKey)}`;
-}
+    function autoCrack(text) {
+      let bestKey = 0;
+      let bestScore = Infinity;
 
-function runCipher() {
-  const text = document.getElementById("inputText").value;
-  const mode = document.getElementById("mode").value;
-  const keyInput = document.getElementById("key").value;
-  let output = "";
+      for (let key = 0; key < 26; key++) {
+        const decrypted = caesarShift(text, -key);
+        const freq = letterFrequency(decrypted);
+        const score = frequencyScore(freq);
+        if (score < bestScore) {
+          bestScore = score;
+          bestKey = key;
+        }
+      }
 
-  if (mode === "encrypt") {
-    const key = parseInt(keyInput) || 0;
-    output = caesarShift(text, key);
-  } else if (mode === "decrypt") {
-    const key = parseInt(keyInput) || 0;
-    output = caesarShift(text, -key);
-  } else if (mode === "bruteforce") {
-    for (let i = 1; i < 26; i++) {
-      output += `Key ${i}: ${caesarShift(text, -i)}\n`;
+      return `Likely Key: ${bestKey}\n\nDecrypted Text:\n${caesarShift(text, -bestKey)}`;
     }
-  } else if (mode === "autocrack") {
-    output = autoCrack(text);
-  }
 
-  document.getElementById("output").textContent = output;
-}
-</script>
+    function runCipher() {
+      const text = document.getElementById("inputText").value;
+      const mode = document.getElementById("mode").value;
+      const keyInput = document.getElementById("key").value;
+      let output = "";
+
+      if (mode === "encrypt") {
+        const key = parseInt(keyInput) || 0;
+        output = caesarShift(text, key);
+      } else if (mode === "decrypt") {
+        const key = parseInt(keyInput) || 0;
+        output = caesarShift(text, -key);
+      } else if (mode === "bruteforce") {
+        for (let i = 1; i < 26; i++) {
+          output += `Key ${i}: ${caesarShift(text, -i)}\n`;
+        }
+      } else if (mode === "autocrack") {
+        output = autoCrack(text);
+      }
+
+      document.getElementById("output").textContent = output;
+    }
+  </script>
 
 </body>
 </html>
