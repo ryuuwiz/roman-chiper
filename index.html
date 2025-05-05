@@ -2,28 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Roman Cipher Tool</title>
+  <title>Roman (Caesar) Cipher Tool</title>
   <style>
-    body { font-family: Arial; padding: 20px; }
-    textarea { width: 100%; height: 100px; }
-    select, button, input { margin-top: 10px; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      margin-bottom: 10px;
+    }
+    select, button, input {
+      margin: 5px 0;
+      padding: 5px;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
   </style>
 </head>
 <body>
 
-<h2>Roman (Caesar) Cipher</h2>
-<textarea id="inputText" placeholder="Enter your text here..."></textarea>
-<br>
+<h2>Roman (Caesar) Cipher Tool</h2>
+
+<textarea id="inputText" placeholder="Enter your text here..."></textarea><br>
 <select id="mode">
   <option value="encrypt">Encrypt</option>
   <option value="decrypt">Decrypt</option>
   <option value="bruteforce">Bruteforce Crack</option>
-  <option value="autocrack">AutoCrack</option>
-</select>
-<br>
-<input type="number" id="key" placeholder="Key (for Encrypt/Decrypt)" />
-<br>
+  <option value="autocrack">AutoCrack (Freq. Analysis)</option>
+</select><br>
+<input type="number" id="key" placeholder="Key (for Encrypt/Decrypt)" /><br>
 <button onclick="runCipher()">Run</button>
+
 <h3>Result:</h3>
 <pre id="output"></pre>
 
@@ -39,6 +56,44 @@ function caesarShift(text, shift) {
     }
     return char;
   }).join('');
+}
+
+function letterFrequency(text) {
+  const freq = Array(26).fill(0);
+  const clean = text.toUpperCase().replace(/[^A-Z]/g, '');
+  for (let char of clean) {
+    freq[char.charCodeAt(0) - 65]++;
+  }
+  return freq.map(f => f / clean.length);
+}
+
+const englishFreq = [
+  0.08167, 0.01492, 0.02782, 0.04253, 0.12702, 0.02228,
+  0.02015, 0.06094, 0.06966, 0.00153, 0.00772, 0.04025,
+  0.02406, 0.06749, 0.07507, 0.01929, 0.00095, 0.05987,
+  0.06327, 0.09056, 0.02758, 0.00978, 0.02360, 0.00150,
+  0.01974, 0.00074
+];
+
+function frequencyScore(textFreq) {
+  return englishFreq.map((ef, i) => Math.abs(ef - textFreq[i])).reduce((a, b) => a + b, 0);
+}
+
+function autoCrack(text) {
+  let bestKey = 0;
+  let bestScore = Infinity;
+
+  for (let key = 0; key < 26; key++) {
+    const decrypted = caesarShift(text, -key);
+    const freq = letterFrequency(decrypted);
+    const score = frequencyScore(freq);
+    if (score < bestScore) {
+      bestScore = score;
+      bestKey = key;
+    }
+  }
+
+  return `Likely Key: ${bestKey}\n\nDecrypted Text:\n${caesarShift(text, -bestKey)}`;
 }
 
 function runCipher() {
@@ -58,15 +113,7 @@ function runCipher() {
       output += `Key ${i}: ${caesarShift(text, -i)}\n`;
     }
   } else if (mode === "autocrack") {
-    const commonWords = ["the", "be", "to", "of", "and", "in", "that", "have", "I"];
-    for (let i = 1; i < 26; i++) {
-      const candidate = caesarShift(text, -i).toLowerCase();
-      if (commonWords.some(word => candidate.includes(word))) {
-        output = `Likely Key ${i}: ${caesarShift(text, -i)}`;
-        break;
-      }
-    }
-    if (output === "") output = "AutoCrack failed to detect a valid message.";
+    output = autoCrack(text);
   }
 
   document.getElementById("output").textContent = output;
