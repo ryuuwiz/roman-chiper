@@ -1,69 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Roman Cipher</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <title>Roman Cipher Tool</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    textarea { width: 100%; height: 100px; }
+    select, button, input { margin-top: 10px; }
+  </style>
 </head>
+<body>
 
-<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+<h2>Roman (Caesar) Cipher</h2>
+<textarea id="inputText" placeholder="Enter your text here..."></textarea>
+<br>
+<select id="mode">
+  <option value="encrypt">Encrypt</option>
+  <option value="decrypt">Decrypt</option>
+  <option value="bruteforce">Bruteforce Crack</option>
+  <option value="autocrack">AutoCrack</option>
+</select>
+<br>
+<input type="number" id="key" placeholder="Key (for Encrypt/Decrypt)" />
+<br>
+<button onclick="runCipher()">Run</button>
+<h3>Result:</h3>
+<pre id="output"></pre>
 
-  <div class="bg-white shadow-lg rounded-lg p-6 w-full max-w-md">
-    <h2 class="text-2xl font-bold mb-4 text-center">Roman Cipher</h2>
-
-    <textarea id="text" placeholder="Type here…"
-      class="w-full border border-gray-300 rounded-lg p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
-
-    <input id="key" type="number" value="3" placeholder="Shift amount"
-      class="w-full border border-gray-300 rounded-lg p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400" />
-
-    <div id="output" class="w-full bg-gray-100 rounded-lg p-3 mb-4 min-h-[3em]"></div>
-
-    <div class="flex gap-4">
-      <button id="encrypt" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg">
-        Encrypt
-      </button>
-      <button id="decrypt" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg">
-        Decrypt
-      </button>
-    </div>
-  </div>
-
-  <script>
-    const UPPER = Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-    const LOWER = Array.from('abcdefghijklmnopqrstuvwxyz');
-
-    function shiftChar(c, n) {
-      if (UPPER.includes(c)) {
-        const idx = UPPER.indexOf(c);
-        return UPPER[(idx + n + 26) % 26];
-      }
-      if (LOWER.includes(c)) {
-        const idx = LOWER.indexOf(c);
-        return LOWER[(idx + n + 26) % 26];
-      }
-      return c;
+<script>
+function caesarShift(text, shift) {
+  return text.split('').map(char => {
+    const code = char.charCodeAt(0);
+    if (char >= 'A' && char <= 'Z') {
+      return String.fromCharCode((code - 65 + shift + 26) % 26 + 65);
     }
-
-    function cipher(str, n) {
-      return [...str].map(ch => shiftChar(ch, n)).join('');
+    if (char >= 'a' && char <= 'z') {
+      return String.fromCharCode((code - 97 + shift + 26) % 26 + 97);
     }
+    return char;
+  }).join('');
+}
 
-    document.getElementById('encrypt').onclick = () => {
-      const k = +document.getElementById('key').value;
-      const txt = document.getElementById('text').value;
-      document.getElementById('output').textContent = cipher(txt, k);
-    };
+function runCipher() {
+  const text = document.getElementById("inputText").value;
+  const mode = document.getElementById("mode").value;
+  const keyInput = document.getElementById("key").value;
+  let output = "";
 
-    document.getElementById('decrypt').onclick = () => {
-      const k = +document.getElementById('key').value;
-      const txt = document.getElementById('text').value;
-      document.getElementById('output').textContent = cipher(txt, -k);
-    };
-  </script>
+  if (mode === "encrypt") {
+    const key = parseInt(keyInput) || 0;
+    output = caesarShift(text, key);
+  } else if (mode === "decrypt") {
+    const key = parseInt(keyInput) || 0;
+    output = caesarShift(text, -key);
+  } else if (mode === "bruteforce") {
+    for (let i = 1; i < 26; i++) {
+      output += `Key ${i}: ${caesarShift(text, -i)}\n`;
+    }
+  } else if (mode === "autocrack") {
+    const commonWords = ["the", "be", "to", "of", "and", "in", "that", "have", "I"];
+    for (let i = 1; i < 26; i++) {
+      const candidate = caesarShift(text, -i).toLowerCase();
+      if (commonWords.some(word => candidate.includes(word))) {
+        output = `Likely Key ${i}: ${caesarShift(text, -i)}`;
+        break;
+      }
+    }
+    if (output === "") output = "AutoCrack failed to detect a valid message.";
+  }
+
+  document.getElementById("output").textContent = output;
+}
+</script>
 
 </body>
-
 </html>
